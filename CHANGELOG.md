@@ -9,3 +9,6 @@
 - Add versioned resource/activity/notification contracts, durable PostgreSQL
   projections, OOB rendering, and `Last-Event-ID` SSE replay with current
   authorization checks.
+- Add the issue #772 conformance consumer, production contract checks, and
+  local acceptance coverage for setup, readiness, tenant isolation, sessions,
+  progressive forms, HTMX, and durable activity.

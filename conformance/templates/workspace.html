@@ -1,0 +1,89 @@
+{% extends "workspace_core/shell.html" %}
+
+{% block workspace_title %}Workspace Core conformance · {{ shell.workspace_name }}{% endblock %}
+
+{% block workspace_head %}
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/conformance.css">
+  <script
+    src="/static/vendor/htmx-2.0.10.min.js"
+    defer
+    data-chirp="htmx"
+    data-chirp-htmx-version="2.0.10"
+  ></script>
+  <script
+    src="/static/vendor/htmx-ext-sse-2.2.4.min.js"
+    defer
+    data-chirp="htmx-extension"
+    data-chirp-htmx-extension="sse"
+    data-chirp-htmx-version="2.0.10"
+  ></script>
+{% endblock %}
+
+{% block workspace_user_menu %}
+  <form method="post" action="/logout" hx-boost="false" hx-disinherit="*">
+    {{ csrf_field() }}
+    <button type="submit">Sign out</button>
+  </form>
+{% endblock %}
+
+{% block workspace_page_title %}
+  {% if view == "commands" %}Commands{% else %}Conformance overview{% endif %}
+{% endblock %}
+
+{% block workspace_content %}
+  {% if view == "commands" %}
+  <section class="conformance-panel">
+    <h2>Available commands</h2>
+    <ul>
+      {% for command in shell.commands %}
+      <li><a href="{{ command.url }}">{{ command.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <section class="conformance-grid" aria-label="Runtime contract">
+    <article class="conformance-panel"><strong>One app</strong><span>Released Chirp + Core</span></article>
+    <article class="conformance-panel"><strong>PostgreSQL</strong><span>Durable tenant authority</span></article>
+    <article class="conformance-panel"><strong>No Redis</strong><span>One-replica baseline</span></article>
+  </section>
+
+  {% if can_write %}
+  <section id="record-check" class="conformance-panel">
+    <h2>Record a durable check</h2>
+    <form
+      method="post"
+      action="{{ activity_url }}"
+      hx-post="{{ activity_url }}"
+      hx-target="#activity-feed"
+      hx-select="unset"
+      hx-swap="afterbegin"
+    >
+      {{ csrf_field() }}
+      <label>Evidence note <input name="note" required maxlength="200"></label>
+      <button type="submit">Record activity</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="conformance-panel">
+    <h2>Durable activity</h2>
+    <ol
+      id="activity-feed"
+      class="conformance-activity"
+      hx-disinherit="hx-select hx-target"
+    >
+      {% for activity in activities %}
+      <li class="workspace-activity" data-activity-id="{{ activity.id }}">
+        <a href="{{ activity.resource.url }}">
+          <strong>{{ activity.action }}</strong>
+          <span>{{ activity.metadata.note if activity.metadata.note is defined else activity.resource.kind }}</span>
+          <time datetime="{{ activity.occurred_at }}">{{ activity.occurred_at }}</time>
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if not activities %}<p>No activity has been recorded.</p>{% endif %}
+  </section>
+  {% endif %}
+{% endblock %}

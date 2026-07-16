@@ -35,6 +35,7 @@ from .errors import (
 from .models import (
     AuditEvent,
     BootstrapResult,
+    BootstrapState,
     Invitation,
     InvitationAcceptance,
     InvitationId,
@@ -123,6 +124,19 @@ class _BootstrapRow:
     completed_at: str | None
     owner_user_id: str | None
     workspace_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class _PrincipalRow:
+    workspace_id: str
+    workspace_slug: str
+    workspace_name: str
+    workspace_created_at: str
+    workspace_updated_at: str
+    membership_id: str
+    membership_role: str
+    membership_created_at: str
+    membership_updated_at: str
 
 
 class WorkspaceRepository:
@@ -214,6 +228,26 @@ class WorkspaceRepository:
     ) -> _T | None:
         try:
             return await self._db.fetch_one(cls, sql, *params)
+        except DatabaseConnectionError as exc:
+            raise DatabaseUnavailableError(
+                f"Workspace database is unavailable while reading {surface}."
+            ) from exc
+        except QueryError as exc:
+            if self._schema_error(exc):
+                raise SchemaMismatchError(
+                    f"Workspace schema cannot read {surface}; run the packaged Core migrations."
+                ) from exc
+            raise
+
+    async def _fetch(
+        self,
+        cls: type[_T],
+        sql: str,
+        *params: Any,
+        surface: str,
+    ) -> list[_T]:
+        try:
+            return await self._db.fetch(cls, sql, *params)
         except DatabaseConnectionError as exc:
             raise DatabaseUnavailableError(
                 f"Workspace database is unavailable while reading {surface}."
@@ -415,6 +449,66 @@ class WorkspaceRepository:
         if row is None or not row.is_active:
             return None
         return self._user(row)
+
+    async def bootstrap_state(self) -> BootstrapState:
+        """Return the durable, secret-free first-owner setup state."""
+
+        row = await self._fetch_one(
+            _BootstrapRow,
+            "SELECT id, completed_at, owner_user_id, workspace_id "
+            "FROM workspace_core_bootstrap WHERE id = 1",
+            surface="first-owner bootstrap state",
+        )
+        if row is None:
+            raise SchemaMismatchError("Workspace bootstrap singleton is missing.")
+        return BootstrapState(
+            id=row.id,
+            completed_at=row.completed_at,
+            owner_user_id=UserId(row.owner_user_id) if row.owner_user_id else None,
+            workspace_id=WorkspaceId(row.workspace_id) if row.workspace_id else None,
+        )
+
+    async def principals_for_user(self, user_id: str) -> tuple[WorkspacePrincipal, ...]:
+        """Return current tenant principals for one active local identity."""
+
+        user = await self.load_user(user_id)
+        if user is None:
+            return ()
+        rows = await self._fetch(
+            _PrincipalRow,
+            "SELECT w.id AS workspace_id, w.slug AS workspace_slug, "
+            "w.name AS workspace_name, w.created_at AS workspace_created_at, "
+            "w.updated_at AS workspace_updated_at, m.id AS membership_id, "
+            "m.role AS membership_role, m.created_at AS membership_created_at, "
+            "m.updated_at AS membership_updated_at "
+            "FROM workspace_core_memberships m "
+            "JOIN workspace_core_workspaces w ON w.id = m.workspace_id "
+            "WHERE m.user_id = ? ORDER BY w.name, w.id",
+            user_id,
+            surface="user workspace principals",
+        )
+        return tuple(
+            WorkspacePrincipal(
+                user=user,
+                workspace=Workspace(
+                    id=WorkspaceId(row.workspace_id),
+                    slug=row.workspace_slug,
+                    name=row.workspace_name,
+                    created_at=row.workspace_created_at,
+                    updated_at=row.workspace_updated_at,
+                ),
+                membership=Membership(
+                    id=MembershipId(row.membership_id),
+                    workspace_id=WorkspaceId(row.workspace_id),
+                    user_id=user.id,
+                    role=Role(row.membership_role),
+                    created_at=row.membership_created_at,
+                    updated_at=row.membership_updated_at,
+                ),
+                permissions=permissions_for_role(Role(row.membership_role)),
+            )
+            for row in rows
+        )
 
     async def authenticate(self, email: str, password: str) -> WorkspaceUser | None:
         """Verify local credentials with unknown-user timing resistance."""

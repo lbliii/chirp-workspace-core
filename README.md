@@ -20,8 +20,88 @@ uv sync
 uv run pytest -q
 uv run ruff check .
 uv run ruff format . --check
-uv run ty check src/
+uv run ty check src/ conformance/
+uv build
 ```
+
+## Conformance consumer
+
+`conformance.app` is the executable proof consumer for
+[issue #772](https://github.com/lbliii/chirp/issues/772). It exercises the
+released Core package through a production-shaped Chirp application so local
+and disposable Railway checks can cover migrations, readiness, authentication,
+tenant isolation, HTMX, normal forms, OOB updates, SSE reconnect, restart, and
+compatible update or rollback behavior.
+
+The consumer is evidence infrastructure. It is not another Workspace product,
+a starter repository, a retained public demo, or a Railway marketplace listing.
+Board, Docs, Chat, and the integrated Workspace remain the independently
+deployable products.
+
+The conformance shell serves pinned local copies of htmx 2.0.10 and the
+official htmx SSE extension 2.2.4. Their license files ship beside the assets;
+the public proof does not depend on a browser-time CDN fetch.
+
+The application requires exactly these values:
+
+| Variable | Requirement |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection URL for acceptance proof. SQLite may be used only for a quick local smoke. |
+| `WORKSPACE_SETUP_TOKEN` | Application-generated first-owner claim token containing at least 24 characters. |
+| `CHIRP_SECRET_KEY` | Signing secret containing at least 32 characters. Rotating it invalidates existing signed sessions. |
+
+Railway supplies `PORT` and `RAILWAY_PUBLIC_DOMAIN`; they are platform inputs,
+not additional application secrets. Set `CHIRP_ENV=production` for the local
+deploy-contract check. The values below are intentionally local-only examples:
+
+```bash
+export DATABASE_URL='sqlite:///workspace-core-conformance.db'
+export WORKSPACE_SETUP_TOKEN='local-only-workspace-setup-token'
+export CHIRP_SECRET_KEY='local-only-workspace-secret-key-00000000'
+export CHIRP_ENV='production'
+export RAILWAY_PUBLIC_DOMAIN='127.0.0.1'
+
+uv run python -m conformance.migrate
+PYTHONPATH=. uv run chirp check conformance.app:app --deploy
+uv run python -m conformance.app
+```
+
+For #772 acceptance, replace the SQLite URL with a disposable PostgreSQL URL,
+then verify both liveness and database/schema readiness:
+
+```bash
+curl --fail http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:8000/ready
+curl --fail --head http://127.0.0.1:8000/ready
+```
+
+Do not commit, print, or copy resolved production secrets into logs, evidence,
+screenshots, template metadata, or issue comments. The full evidence and
+approval-gate matrix lives in [`conformance/EVIDENCE.md`](conformance/EVIDENCE.md).
+
+### Railway proof topology
+
+The cost-bounded baseline is exactly two Railway services: one web replica
+running one Pounce serving process, plus one managed PostgreSQL service with
+exactly one volume mounted at `/var/lib/postgresql/data`. The web service keeps
+`DATABASE_URL` as the exact
+private reference `${{Postgres.DATABASE_URL}}`; `CHIRP_SECRET_KEY` and
+`WORKSPACE_SETUP_TOKEN` use Railway-generated secret expressions. Migrations
+run through `uv run python -m conformance.migrate` before the web process starts,
+and the proof blueprint sets `CHIRP_SKIP_MIGRATIONS=1` on the web service so
+that pre-deploy is the single migration owner. Railway checks `/ready` before
+declaring the deployment healthy.
+
+Redis, background-worker services, email, object storage, and extra replicas
+are not part of this baseline. Redis becomes eligible only after measured need
+for multi-process SSE fan-out, shared rate limits, caching, or a selected job
+transport.
+
+Railway proof uses separate source and empty disposable clean-proof projects.
+It may use a private or draft proof blueprint and temporary public networking,
+but it must not publish Workspace Core to the marketplace, attach a retained
+Core demo, or add Core as a catalog product. Creating, mutating, ejecting, or
+removing Railway and GitHub proof resources remains an explicit approval gate.
 
 ## Security boundary
 
