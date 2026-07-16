@@ -96,10 +96,15 @@
     <ol
       id="activity-feed"
       class="conformance-activity"
+      hx-disinherit="hx-select hx-target"
     >
       {% for activity in activities %}
       <li class="workspace-activity" data-activity-id="{{ activity.id }}">
-        <a href="{{ activity.resource.url }}">
+        <a
+          href="{{ activity.resource.url }}"
+          hx-target="#workspace-main"
+          hx-select="#workspace-main"
+        >
           <strong>{{ activity.action }}</strong>
           <span>{{ activity.metadata.note if activity.metadata.note is defined else activity.resource.kind }}</span>
           <time datetime="{{ activity.occurred_at }}">{{ activity.occurred_at }}</time>

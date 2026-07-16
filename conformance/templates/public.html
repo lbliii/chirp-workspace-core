@@ -23,11 +23,10 @@
   <main id="main" class="conformance-public-main">
     <section class="conformance-public-intro" aria-labelledby="public-title">
       <p class="conformance-eyebrow">Workspace foundation</p>
+      <h1 id="public-title">{% if mode == "setup" %}Claim your first workspace.{% else %}Return to your workspace.{% endif %}</h1>
       {% if mode == "setup" %}
-      <h1 id="public-title">Claim your first workspace.</h1>
       <p>Establish the first owner and a durable PostgreSQL-backed workspace. The generated setup token works once and is never stored as a default credential.</p>
       {% else %}
-      <h1 id="public-title">Return to your workspace.</h1>
       <p>Sign in with the deployment-local identity created when this proof environment was claimed.</p>
       {% endif %}
       <div class="conformance-trust-row" aria-label="Environment properties">

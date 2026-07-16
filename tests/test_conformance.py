@@ -255,7 +255,7 @@ async def test_conformance_setup_page_claims_once_and_readiness_is_healthy(
     assert 'id="workspace-sidebar"' in workspace.text
     assert 'hx-target="#workspace-main"' in workspace.text
     assert 'hx-select="#workspace-main"' in workspace.text
-    assert 'hx-disinherit="hx-select hx-target"' not in workspace.text
+    assert 'hx-disinherit="hx-select hx-target"' in workspace.text
     assert workspace.text.index("htmx-2.0.10.min.js") < workspace.text.index(
         "htmx-ext-sse-2.2.4.min.js"
     )
@@ -505,7 +505,12 @@ async def test_conformance_activity_supports_htmx_and_plain_form_fallback(
     assert "HTMX persistence proof" in persisted.text
     assert 'id="workspace-sidebar"' in persisted.text
     assert 'id="activity-feed"' in persisted.text
-    assert 'hx-disinherit="hx-select hx-target"' not in persisted.text
+    assert 'hx-disinherit="hx-select hx-target"' in persisted.text
+    assert re.search(
+        rf'<a\s+href="{re.escape(workspace_path)}"\s+'
+        r'hx-target="#workspace-main"\s+hx-select="#workspace-main"',
+        persisted.text,
+    )
 
     plain, _ = await post_form(
         client,
