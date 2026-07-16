@@ -17,6 +17,16 @@ jobs:
       - run: uv run playwright install --with-deps chromium
       - run: uv run ruff check .
       - run: uv run ruff format . --check
-      - run: uv run ty check src/
+      - run: uv run ty check src/ conformance/
+      - name: Check conformance deploy contract
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          WORKSPACE_SETUP_TOKEN: "ci-only-workspace-setup-token-00000000"
+          CHIRP_SECRET_KEY: "ci-only-workspace-secret-key-0000000000000000"
+          CHIRP_ENV: "production"
+          RAILWAY_PUBLIC_DOMAIN: "workspace-core-conformance.invalid"
+          PORT: "8000"
+          PYTHONPATH: "."
+        run: uv run chirp check conformance.app:app --deploy
       - run: uv run pytest --cov=chirp_workspace_core --cov-report=term-missing --cov-fail-under=80 -q
       - run: uv build

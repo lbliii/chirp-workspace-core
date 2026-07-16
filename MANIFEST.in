@@ -1,0 +1,3 @@
+include CHANGELOG.md
+include railway.json
+recursive-include conformance *.css *.html *.js *.LICENSE *.md *.py *.svg
