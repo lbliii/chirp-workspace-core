@@ -26,7 +26,10 @@ def test_installed_package_contains_ordered_workspace_migrations() -> None:
     directory = migration_directory()
 
     assert directory.is_dir()
-    assert [path.name for path in directory.glob("*.sql")] == ["001_workspace_core.sql"]
+    assert [path.name for path in sorted(directory.glob("*.sql"))] == [
+        "001_workspace_core.sql",
+        "002_workspace_activity.sql",
+    ]
     assert (
         "CREATE TABLE workspace_core_memberships"
         in (directory / "001_workspace_core.sql").read_text()
@@ -40,9 +43,9 @@ async def test_migrations_apply_once_and_replay_without_schema_drift(tmp_path: P
         first = await migrate(database, migration_directory())
         replay = await migrate(database, migration_directory())
 
-        assert first.applied == ["001_workspace_core"]
+        assert first.applied == ["001_workspace_core", "002_workspace_activity"]
         assert replay.applied == []
-        assert replay.already_applied == 1
+        assert replay.already_applied == 2
         expected_tables = {
             "workspace_core_users",
             "workspace_core_workspaces",
@@ -51,6 +54,9 @@ async def test_migrations_apply_once_and_replay_without_schema_drift(tmp_path: P
             "workspace_core_password_resets",
             "workspace_core_audit_events",
             "workspace_core_bootstrap",
+            "workspace_core_activity_events",
+            "workspace_core_notification_sequence",
+            "workspace_core_notifications",
         }
         for table in expected_tables:
             assert (

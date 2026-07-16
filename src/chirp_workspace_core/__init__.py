@@ -1,5 +1,6 @@
-"""Application-owned tenancy and identity foundation for Chirp Workspace products."""
+"""Application-owned identity, activity, and shell foundation for Workspace products."""
 
+from .activity import ActivityRepository, notification_event_stream, parse_last_event_id
 from .auth import WorkspaceUserLoader, chirp_auth_config
 from .errors import (
     AuthenticationError,
@@ -21,6 +22,16 @@ from .errors import (
     TenantMismatchError,
     ValidationError,
     WorkspaceCoreError,
+)
+from .events import (
+    ActivityEvent,
+    ActivityId,
+    MetadataValue,
+    Notification,
+    NotificationDraft,
+    NotificationId,
+    ResourceId,
+    ResourceReference,
 )
 from .models import (
     AuditEvent,
@@ -46,14 +57,31 @@ from .models import (
 )
 from .permissions import Permission, has_permission, permissions_for_role, require_permission
 from .repository import WorkspaceRepository
+from .shell import (
+    Breadcrumb,
+    NavigationItem,
+    ShellCommand,
+    ShellContext,
+    WorkspaceChoice,
+    activity_fragment,
+    build_shell_context,
+    notification_fragment,
+    notification_oob,
+    register_shell_assets,
+    workspace_templates_dir,
+)
 
 __all__ = [
+    "ActivityEvent",
+    "ActivityId",
+    "ActivityRepository",
     "AuditEvent",
     "AuditEventId",
     "AuthenticationError",
     "AuthorizationError",
     "BootstrapResult",
     "BootstrapState",
+    "Breadcrumb",
     "ConflictError",
     "DatabaseUnavailableError",
     "DuplicateInvitationError",
@@ -69,7 +97,12 @@ __all__ = [
     "LastOwnerError",
     "Membership",
     "MembershipId",
+    "MetadataValue",
+    "NavigationItem",
     "NotFoundError",
+    "Notification",
+    "NotificationDraft",
+    "NotificationId",
     "PasswordReset",
     "PasswordResetConsumedError",
     "PasswordResetError",
@@ -77,21 +110,34 @@ __all__ = [
     "PasswordResetId",
     "PasswordResetRevokedError",
     "Permission",
+    "ResourceId",
+    "ResourceReference",
     "Role",
     "SchemaMismatchError",
+    "ShellCommand",
+    "ShellContext",
     "TenantMismatchError",
     "UserId",
     "ValidationError",
     "Workspace",
+    "WorkspaceChoice",
     "WorkspaceCoreError",
     "WorkspaceId",
     "WorkspacePrincipal",
     "WorkspaceRepository",
     "WorkspaceUser",
     "WorkspaceUserLoader",
+    "activity_fragment",
+    "build_shell_context",
     "chirp_auth_config",
     "has_permission",
     "new_id",
+    "notification_event_stream",
+    "notification_fragment",
+    "notification_oob",
+    "parse_last_event_id",
     "permissions_for_role",
+    "register_shell_assets",
     "require_permission",
+    "workspace_templates_dir",
 ]

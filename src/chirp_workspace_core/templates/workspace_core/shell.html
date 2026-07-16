@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block workspace_title %}{{ shell.product_name }} · {{ shell.workspace_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ shell.asset_prefix }}/shell.css">
+  <script src="{{ shell.asset_prefix }}/shell.js" defer></script>
+  {% block workspace_head %}{% endblock %}
+</head>
+<body
+  hx-boost="true"
+  hx-target="#workspace-main"
+  hx-select="#workspace-main"
+  hx-swap="outerHTML show:top"
+>
+  <a class="workspace-skip-link" href="#workspace-main">Skip to content</a>
+
+  <header class="workspace-topbar" aria-label="Workspace header">
+    <button
+      class="workspace-mobile-toggle"
+      type="button"
+      aria-label="Toggle navigation"
+      aria-controls="workspace-sidebar"
+      aria-expanded="false"
+      data-workspace-nav-toggle
+    >☰</button>
+    <a class="workspace-brand" href="/" aria-label="{{ shell.product_name }} home">
+      <span aria-hidden="true">◈</span>
+      <span>{{ shell.product_name }}</span>
+    </a>
+
+    <details class="workspace-switcher">
+      <summary>{{ shell.workspace_name }}</summary>
+      <ul aria-label="Available workspaces">
+        {% for choice in shell.workspace_choices %}
+        <li>
+          <a href="{{ choice.url }}"{% if choice.current %} aria-current="page"{% endif %}>
+            {{ choice.name }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+
+    <a class="workspace-command-link" href="{{ shell.commands_url }}" data-workspace-command-open>
+      Commands <kbd>⌘K</kbd>
+    </a>
+
+    <details class="workspace-user-menu">
+      <summary aria-label="Open user menu">{{ shell.user_display_name }}</summary>
+      <div>{% block workspace_user_menu %}{% endblock %}</div>
+    </details>
+  </header>
+
+  <div class="workspace-layout">
+    <aside id="workspace-sidebar" class="workspace-sidebar" aria-label="Product navigation">
+      <nav aria-label="Workspace products">
+        <ul>
+          {% for item in shell.primary_navigation %}
+          <li>
+            <a href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>
+              {{ item.label }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% if shell.product_navigation %}
+      <nav aria-label="{{ shell.product_name }} sections">
+        <p class="workspace-nav-heading">{{ shell.product_name }}</p>
+        <ul>
+          {% for item in shell.product_navigation %}
+          <li>
+            <a href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>
+              {{ item.label }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endif %}
+    </aside>
+
+    {% block workspace_main %}
+    <main id="workspace-main" class="workspace-main" tabindex="-1">
+      <nav class="workspace-breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          {% for crumb in shell.breadcrumbs %}
+          <li>
+            {% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.label }}</a>{% else %}<span aria-current="page">{{ crumb.label }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </nav>
+      <header class="workspace-page-header">
+        <h1 data-workspace-page-heading>{% block workspace_page_title %}{{ shell.product_name }}{% endblock %}</h1>
+        {% block workspace_page_actions %}{% endblock %}
+      </header>
+      <div id="workspace-page-content">
+        {% block workspace_content %}{% endblock %}
+      </div>
+    </main>
+    {% endblock %}
+  </div>
+
+  <section
+    id="workspace-notifications"
+    class="workspace-notifications"
+    aria-label="Notifications"
+    aria-live="polite"
+    aria-atomic="false"
+  >
+    <h2 class="workspace-visually-hidden">Notifications</h2>
+    <p class="workspace-connection-status workspace-visually-hidden" role="status" data-workspace-sse-status></p>
+    {% if shell.notification_events_url %}
+    <div
+      hx-ext="sse"
+      sse-connect="{{ shell.notification_events_url }}"
+      hx-disinherit="hx-target hx-swap hx-select"
+      data-workspace-notification-stream
+    >
+      <div sse-swap="message" hx-target="#workspace-notification-list" hx-swap="afterbegin"></div>
+    </div>
+    {% endif %}
+    <ol id="workspace-notification-list">
+      {% for notification in shell.notifications %}
+      <li class="workspace-notification" data-notification-id="{{ notification.id }}">
+        <a href="{{ notification.url }}">
+          <strong>{{ notification.title }}</strong>
+          <span>{{ notification.body }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <dialog id="workspace-command-palette" class="workspace-command-palette" aria-labelledby="workspace-command-title">
+    <form method="dialog" class="workspace-dialog-close">
+      <button type="submit" aria-label="Close command palette">×</button>
+    </form>
+    <h2 id="workspace-command-title">Commands</h2>
+    <label for="workspace-command-search">Search commands</label>
+    <input id="workspace-command-search" type="search" autocomplete="off" data-workspace-command-search>
+    <ul data-workspace-command-list>
+      {% for command in shell.commands %}
+      <li data-workspace-command-item data-command-text="{{ command.label }} {{ command.group }}">
+        <a href="{{ command.url }}">
+          <span><small>{{ command.group }}</small>{{ command.label }}</span>
+          {% if command.shortcut %}<kbd>{{ command.shortcut }}</kbd>{% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    <p data-workspace-command-empty hidden>No matching commands.</p>
+  </dialog>
+
+  {% block workspace_body_end %}{% endblock %}
+
+  {% fragment workspace_notification %}
+  <li class="workspace-notification" data-notification-id="{{ notification.id }}">
+    <a href="{{ notification.url }}">
+      <strong>{{ notification.title }}</strong>
+      <span>{{ notification.body }}</span>
+    </a>
+  </li>
+  {% end %}
+
+  {% fragment workspace_activity_item %}
+  <li class="workspace-activity" data-activity-id="{{ activity.id }}">
+    <a href="{{ activity.resource.url }}">
+      <strong>{{ activity.action }}</strong>
+      <span>{{ activity.resource.product }} · {{ activity.resource.kind }}</span>
+      <time datetime="{{ activity.occurred_at }}">{{ activity.occurred_at }}</time>
+    </a>
+  </li>
+  {% end %}
+
+  {% fragment workspace_oob_ack %}
+  <span class="workspace-visually-hidden">Notification {{ notification.id }} delivered.</span>
+  {% end %}
+
+  {% fragment workspace_empty_state %}
+  <section class="workspace-state" role="status">
+    <h2>{{ title }}</h2>
+    <p>{{ message }}</p>
+  </section>
+  {% end %}
+
+  {% fragment workspace_loading_state %}
+  <section class="workspace-state" role="status" aria-busy="true">
+    <h2>{{ title }}</h2>
+    <p>Loading…</p>
+  </section>
+  {% end %}
+
+  {% fragment workspace_error_state %}
+  <section class="workspace-state workspace-state-error" role="alert">
+    <h2>{{ title }}</h2>
+    <p>{{ message }}</p>
+  </section>
+  {% end %}
+
+  {% fragment workspace_toast %}
+  <div class="workspace-toast" role="status">{{ message }}</div>
+  {% end %}
+
+  {% fragment workspace_modal %}
+  <dialog class="workspace-modal" aria-labelledby="workspace-modal-title" open>
+    <h2 id="workspace-modal-title">{{ title }}</h2>
+    <p>{{ message }}</p>
+    <form method="dialog"><button type="submit">Close</button></form>
+  </dialog>
+  {% end %}
+</body>
+</html>
