@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block workspace_page_title %}
-  {% if view == "commands" %}Commands{% else %}Conformance overview{% endif %}
+  {% if view == "commands" %}Commands{% else %}Foundation checks{% endif %}
 {% endblock %}
 
 {% block workspace_content %}
@@ -42,15 +42,38 @@
     </ul>
   </section>
   {% else %}
-  <section class="conformance-grid" aria-label="Runtime contract">
-    <article class="conformance-panel"><strong>One app</strong><span>Released Chirp + Core</span></article>
-    <article class="conformance-panel"><strong>PostgreSQL</strong><span>Durable tenant authority</span></article>
-    <article class="conformance-panel"><strong>No Redis</strong><span>One-replica baseline</span></article>
+  <section class="conformance-intro" aria-labelledby="conformance-intro-title">
+    <div>
+      <p class="conformance-eyebrow">Core proof environment</p>
+      <h2 id="conformance-intro-title">Know the foundation holds.</h2>
+      <p>This compact environment proves identity, tenant boundaries, durable activity, and the shared Workspace shell before product templates build on top.</p>
+    </div>
+    <span class="conformance-proof-status">Proof online</span>
+  </section>
+
+  <section class="conformance-grid" aria-label="Runtime foundation">
+    <article class="conformance-panel conformance-status-card">
+      <span class="conformance-status-label">Application</span>
+      <strong>One Chirp app</strong>
+      <span>Released Chirp + Workspace Core</span>
+    </article>
+    <article class="conformance-panel conformance-status-card">
+      <span class="conformance-status-label">Persistence</span>
+      <strong>PostgreSQL</strong>
+      <span>Durable, tenant-scoped authority</span>
+    </article>
+    <article class="conformance-panel conformance-status-card">
+      <span class="conformance-status-label">Topology</span>
+      <strong>Single replica</strong>
+      <span>No Redis or background worker</span>
+    </article>
   </section>
 
   {% if can_write %}
   <section id="record-check" class="conformance-panel">
-    <h2>Record a durable check</h2>
+    <p class="conformance-eyebrow">Persistence</p>
+    <h2>Save a persistence test</h2>
+    <p class="conformance-panel-copy">Write a short note to this workspace’s append-only PostgreSQL activity log. It should remain here after a service restart.</p>
     <form
       method="post"
       action="{{ activity_url }}"
@@ -60,18 +83,19 @@
       hx-swap="afterbegin"
     >
       {{ csrf_field() }}
-      <label>Evidence note <input name="note" required maxlength="200"></label>
-      <button type="submit">Record activity</button>
+      <label>Check note <input name="note" required maxlength="200" placeholder="For example: survives the 0.10.3 rollout"></label>
+      <button type="submit">Save check</button>
     </form>
   </section>
   {% endif %}
 
   <section class="conformance-panel">
-    <h2>Durable activity</h2>
+    <p class="conformance-eyebrow">Workspace history</p>
+    <h2>Saved checks</h2>
+    <p class="conformance-panel-copy">Each entry is scoped to this workspace and records the actor, time, and evidence note.</p>
     <ol
       id="activity-feed"
       class="conformance-activity"
-      hx-disinherit="hx-select hx-target"
     >
       {% for activity in activities %}
       <li class="workspace-activity" data-activity-id="{{ activity.id }}">
@@ -83,7 +107,7 @@
       </li>
       {% endfor %}
     </ol>
-    {% if not activities %}<p>No activity has been recorded.</p>{% endif %}
+    {% if not activities %}<p class="conformance-empty">No persistence tests have been saved yet.</p>{% endif %}
   </section>
   {% endif %}
 {% endblock %}

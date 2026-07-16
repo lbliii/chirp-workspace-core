@@ -213,9 +213,14 @@ def create_conformance_runtime(
         base = f"/workspaces/{principal.workspace.id}"
         shell = build_shell_context(
             principal,
-            product_name="Core Conformance",
+            product_name="Workspace Core",
             primary_navigation=(
-                NavigationItem("Overview", base, "workspace-core", active=view == "dashboard"),
+                NavigationItem(
+                    "Foundation",
+                    base,
+                    "workspace-core",
+                    active=view == "dashboard",
+                ),
                 NavigationItem(
                     "Commands", f"{base}/commands", "workspace-core", active=view == "commands"
                 ),
@@ -231,13 +236,13 @@ def create_conformance_runtime(
             ),
             breadcrumbs=(
                 Breadcrumb(principal.workspace.name, base),
-                Breadcrumb("Commands" if view == "commands" else "Conformance"),
+                Breadcrumb("Commands" if view == "commands" else "Foundation checks"),
             ),
             commands=(
-                ShellCommand("overview", "Open conformance overview", base),
+                ShellCommand("overview", "Open foundation checks", base),
                 ShellCommand(
                     "record-check",
-                    "Record conformance activity",
+                    "Save a persistence test",
                     f"{base}#record-check",
                     required_permissions=frozenset({Permission.CONTENT_WRITE}),
                 ),

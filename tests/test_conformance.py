@@ -214,7 +214,7 @@ async def test_conformance_setup_page_claims_once_and_readiness_is_healthy(
     assert "text/javascript" in core_javascript.content_type
     assert "data-workspace-command-open" in core_javascript.text
     assert page.status == 200
-    assert "Claim the first workspace" in page.text
+    assert "Claim your first workspace" in page.text
     assert 'name="_csrf_token"' in page.text
     token = extract_csrf(page.text)
     cookie = response_cookie(page)
@@ -250,8 +250,12 @@ async def test_conformance_setup_page_claims_once_and_readiness_is_healthy(
     assert "'nonce-" in policies[0]
     assert transport == ["max-age=86400"]
     assert "<!doctype html>" in workspace.text
-    assert "Conformance overview" in workspace.text
+    assert "Foundation checks" in workspace.text
     assert "Primary Workspace" in workspace.text
+    assert 'id="workspace-sidebar"' in workspace.text
+    assert 'hx-target="#workspace-main"' in workspace.text
+    assert 'hx-select="#workspace-main"' in workspace.text
+    assert 'hx-disinherit="hx-select hx-target"' not in workspace.text
     assert workspace.text.index("htmx-2.0.10.min.js") < workspace.text.index(
         "htmx-ext-sse-2.2.4.min.js"
     )
@@ -270,12 +274,12 @@ async def test_conformance_setup_page_claims_once_and_readiness_is_healthy(
     assert narrow.status == 200
     assert "<!doctype html>" not in narrow.text
     assert 'id="workspace-main"' not in narrow.text
-    assert "Conformance overview" not in narrow.text
-    assert "Record a durable check" in narrow.text
+    assert "Foundation checks" not in narrow.text
+    assert "Save a persistence test" in narrow.text
     assert boosted.status == 200
     assert "<!doctype html>" not in boosted.text
     assert 'id="workspace-main"' in boosted.text
-    assert "Conformance overview" in boosted.text
+    assert "Foundation checks" in boosted.text
 
     replay_token = extract_csrf(workspace.text)
     replay_cookie = response_cookie(workspace) or session_cookie
@@ -499,6 +503,9 @@ async def test_conformance_activity_supports_htmx_and_plain_form_fallback(
     persisted = await client.get(workspace_path, headers=cookie_headers(cookie))
     assert persisted.status == 200
     assert "HTMX persistence proof" in persisted.text
+    assert 'id="workspace-sidebar"' in persisted.text
+    assert 'id="activity-feed"' in persisted.text
+    assert 'hx-disinherit="hx-select hx-target"' not in persisted.text
 
     plain, _ = await post_form(
         client,
