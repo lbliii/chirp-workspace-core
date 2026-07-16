@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chirp-workspace-core"
+version = "0.1.0a1"
+description = "Application-owned tenancy, identity, and permission foundation for Chirp Workspace products"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+authors = [{ name = "Bengal Contributors" }]
+dependencies = [
+  "bengal-chirp[auth,data-pg,sessions]>=0.10,<0.11",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/lbliii/chirp-workspace-core"
+Issues = "https://github.com/lbliii/chirp/issues"
+
+[dependency-groups]
+dev = [
+  "pytest>=9.0",
+  "pytest-asyncio>=1.0",
+  "pytest-cov>=7.0",
+  "ruff>=0.15",
+  "ty>=0.0.11",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+  "issue(number): GitHub issue acceptance traceability",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+chirp_workspace_core = ["py.typed", "migrations/*.sql"]
