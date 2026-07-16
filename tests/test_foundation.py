@@ -26,7 +26,7 @@ def test_installed_package_contains_ordered_workspace_migrations() -> None:
     directory = migration_directory()
 
     assert directory.is_dir()
-    assert [path.name for path in directory.glob("*.sql")] == [
+    assert [path.name for path in sorted(directory.glob("*.sql"))] == [
         "001_workspace_core.sql",
         "002_workspace_activity.sql",
     ]
