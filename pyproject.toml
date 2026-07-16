@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "chirp-workspace-core"
 version = "0.1.0a1"
-description = "Application-owned tenancy, identity, and permission foundation for Chirp Workspace products"
+description = "Application-owned identity, activity, notifications, and shared shell for Chirp Workspace products"
 readme = "README.md"
 requires-python = ">=3.14"
 license = "MIT"
@@ -26,6 +26,7 @@ Issues = "https://github.com/lbliii/chirp/issues"
 
 [dependency-groups]
 dev = [
+  "playwright>=1.61.0",
   "pytest>=9.0",
   "pytest-asyncio>=1.0",
   "pytest-cov>=7.0",
@@ -50,4 +51,10 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-chirp_workspace_core = ["py.typed", "migrations/*.sql"]
+chirp_workspace_core = [
+  "py.typed",
+  "assets/*.css",
+  "assets/*.js",
+  "migrations/*.sql",
+  "templates/workspace_core/*.html",
+]

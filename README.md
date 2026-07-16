@@ -1,15 +1,16 @@
 # Chirp Workspace Core
 
-Application-owned tenancy, identity, membership, invitation, and role-based
-authorization for Chirp Board, Docs, Chat, and the integrated Workspace.
+Application-owned tenancy, identity, role-based authorization, activity,
+notifications, and product shell for Chirp Board, Docs, Chat, and the integrated
+Workspace.
 
 This package is not part of Chirp's framework API and is not a standalone
 marketplace product. It consumes released Chirp contracts and supplies one
 versioned application foundation to focused Workspace product repositories.
 
-The first implementation is tracked by
-[Chirp issue #770](https://github.com/lbliii/chirp/issues/770). Architecture and
-ownership are frozen in
+Identity/RBAC and shell/activity delivery are tracked by
+[Chirp issue #770](https://github.com/lbliii/chirp/issues/770) and
+[Chirp issue #765](https://github.com/lbliii/chirp/issues/765). Architecture and ownership are frozen in
 [decision #764](https://github.com/lbliii/chirp/issues/764).
 
 ## Development
@@ -35,10 +36,15 @@ identity provider, or framework API change is introduced here.
 ## Application integration
 
 ```python
-from chirp import App
+from chirp import App, AppConfig
 from chirp.data import Database, migrate
 
-from chirp_workspace_core import WorkspaceRepository, chirp_auth_config
+from chirp_workspace_core import (
+    WorkspaceRepository,
+    chirp_auth_config,
+    register_shell_assets,
+    workspace_templates_dir,
+)
 from chirp_workspace_core.migrations import migration_directory
 
 database = Database("postgresql://...")
@@ -46,7 +52,14 @@ await database.connect()
 await migrate(database, migration_directory())
 
 identities = WorkspaceRepository(database)
-app = App(db=database)
+app = App(
+    config=AppConfig(
+        template_dir="templates",
+        component_dirs=(workspace_templates_dir(),),
+    ),
+    db=database,
+)
+register_shell_assets(app)
 auth = chirp_auth_config(identities)
 ```
 
@@ -61,9 +74,75 @@ to the caller while persisting SHA-256 digests. Applications must deliver those
 tokens manually or through an explicitly configured provider and must never
 write them to logs, templates, activity, or audit metadata.
 
+## Shared shell
+
+Product page templates extend `workspace_core/shell.html` and override its
+named `workspace_title`, `workspace_page_title`, `workspace_page_actions`, and
+`workspace_content` blocks. Routes pass a `ShellContext` built from the current
+`WorkspacePrincipal`; `build_shell_context()` removes navigation and commands
+whose exact permission requirements are not present. Route handlers must still
+enforce the same permissions—the hidden link is not an authorization boundary.
+
+The shell keeps ordinary links and forms as its no-JavaScript behavior. When a
+product loads htmx, boosted navigation swaps the named `workspace_main` block
+while the topbar, notification stream, and focus contract remain stable. Core
+does not bundle or select an htmx version for consumers. The package asset
+routes add only local shell CSS and a small DOM-behavior script; there is no
+client router or global state store.
+
+Each product supplies `commands_url` as an ordinary server-rendered command
+index/search route. The dialog is an enhancement of those same links, so a
+script failure does not remove command access.
+
+Keyboard behavior:
+
+- `Control+K` or `Command+K` opens the command palette.
+- `/` opens it when focus is not in an editable control.
+- Native dialog `Escape` closes it and restores focus to the invoker.
+- After an htmx main-content swap, focus moves to the new page heading.
+
+The shell uses landmarks, a skip link, polite notification announcements,
+native dialog behavior, responsive navigation, visible focus, and
+`prefers-reduced-motion`. Products remain responsible for the accessibility of
+their own content and commands.
+
+## Activity, notifications, and reconnect
+
+`ActivityRepository.record()` appends a versioned `ActivityEvent` and its
+recipient-specific `NotificationDraft` projections in one transaction.
+Activity is distinct from Core's security audit log. All resource and
+notification URLs must be safe application-local paths, metadata is scalar and
+secret-bearing keys are rejected, and every read includes workspace and user
+scope.
+
+`notification_event_stream()` queries the durable notification table after the
+browser's `Last-Event-ID`, renders the shared notification named block, and
+emits an `SSEEvent` with the monotonic delivery sequence as its cursor. Its
+authorization callback runs before every poll so a role or membership change
+closes the stream instead of retaining stale authority. This one-replica
+baseline polls PostgreSQL; Redis is introduced only after measured
+multi-process fan-out need.
+
+```python
+@app.route("/workspaces/{workspace_id}/notifications/events", referenced=True)
+def notification_events(request, workspace_id: str):
+    user = get_user()
+    return notification_event_stream(
+        app,
+        activity,
+        user_id=user.id,
+        workspace_id=WorkspaceId(workspace_id),
+        authorize=reload_current_membership,
+        last_event_id=request.headers.get("last-event-id"),
+    )
+```
+
+`reload_current_membership` must query current identity/membership state from
+the database; it must not close over the request's original principal.
+
 ## Persistence contract
 
-Core owns only the `workspace_core_*` tables in its packaged migration. Product
+Core owns only the `workspace_core_*` tables in its packaged migrations. Product
 repositories own their own namespaced tables. Migrations are append-only and
 checksum-protected by Chirp; rollback means deploying a schema-compatible prior
 application version, not silently reversing data migrations.
