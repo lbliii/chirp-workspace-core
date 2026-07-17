@@ -24,6 +24,16 @@ uv run ty check src/ conformance/
 uv build
 ```
 
+## Release
+
+Core releases are immutable public package artifacts. A `v*` tag whose value matches the version
+in `pyproject.toml` builds the sdist and wheel once, publishes them to PyPI through a dedicated
+trusted-publisher job, and then attaches the same artifacts to a GitHub release.
+
+The one-time PyPI trusted-publisher record must use owner `lbliii`, repository
+`chirp-workspace-core`, workflow `release.yml`, and environment `pypi`. The workflow receives an
+OIDC token only in the publish job; no long-lived package-index token is stored in GitHub.
+
 ## Conformance consumer
 
 `conformance.app` is the executable proof consumer for

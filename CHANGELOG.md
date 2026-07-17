@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0a2 - 2026-07-17
 
 - Establish the Workspace Core identity, tenancy, invitation, and RBAC package.
 - Add the permission-aware shared shell, keyboard command palette, reusable
@@ -15,3 +15,5 @@
 - Polish the conformance setup and Workspace shell with the Chirp Railway
   template visual language, clearer persistence-test copy, and continuous
   sidebar navigation across boosted activity links.
+- Publish signed source and wheel artifacts through PyPI trusted publishing so
+  product repositories can consume an immutable public Core release.
