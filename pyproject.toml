@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chirp-workspace-core"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "Application-owned identity, activity, notifications, and shared shell for Chirp Workspace products"
 readme = "README.md"
 requires-python = ">=3.14"
