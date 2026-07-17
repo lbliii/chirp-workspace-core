@@ -47,9 +47,11 @@ jobs:
         run: |
           cd dist
           for archive in *.whl *.tar.gz; do
-            printf '<a href="%s">%s</a>\n' "$archive" "$archive"
+            digest="$(sha256sum "$archive" | cut -d ' ' -f 1)"
+            printf '<a href="%s#sha256=%s">%s</a>\n' "$archive" "$digest" "$archive"
           done > index.html
-          gh release create "$RELEASE_TAG" ./* --repo "$GITHUB_REPOSITORY" --generate-notes
+          gh release create "$RELEASE_TAG" ./* \
+            --repo "$GITHUB_REPOSITORY" --generate-notes --prerelease
 
   publish-pages:
     needs: build
@@ -69,7 +71,8 @@ jobs:
         run: |
           cd dist
           for archive in *.whl *.tar.gz; do
-            printf '<a href="%s">%s</a>\n' "$archive" "$archive"
+            digest="$(sha256sum "$archive" | cut -d ' ' -f 1)"
+            printf '<a href="%s#sha256=%s">%s</a>\n' "$archive" "$digest" "$archive"
           done > index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
