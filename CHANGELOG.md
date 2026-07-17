@@ -15,5 +15,5 @@
 - Polish the conformance setup and Workspace shell with the Chirp Railway
   template visual language, clearer persistence-test copy, and continuous
   sidebar navigation across boosted activity links.
-- Publish signed source and wheel artifacts through PyPI trusted publishing so
-  product repositories can consume an immutable public Core release.
+- Publish source and wheel artifacts with a flat public GitHub release index so
+  product repositories can consume an immutable Core release without PyPI.
