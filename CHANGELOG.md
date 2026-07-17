@@ -12,3 +12,6 @@
 - Add the issue #772 conformance consumer, production contract checks, and
   local acceptance coverage for setup, readiness, tenant isolation, sessions,
   progressive forms, HTMX, and durable activity.
+- Polish the conformance setup and Workspace shell with the Chirp Railway
+  template visual language, clearer persistence-test copy, and continuous
+  sidebar navigation across boosted activity links.
