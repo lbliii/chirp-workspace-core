@@ -27,10 +27,9 @@ uv build
 ## Release
 
 Core releases are immutable public package artifacts. A `v*` tag whose value matches the version
-in `pyproject.toml` builds the sdist and wheel once, attaches them to a GitHub release, and includes
-a flat `index.html` that standards-aware package tooling can use to resolve the released files.
-No package-index account, private registry, Git dependency, or long-lived publication token is
-required.
+in `pyproject.toml` builds the sdist and wheel once, attaches them to a GitHub release, and deploys
+the same files to the public flat index at `https://lbliii.github.io/chirp-workspace-core/`.
+No PyPI account, private registry, Git dependency, or long-lived publication token is required.
 
 ## Conformance consumer
 

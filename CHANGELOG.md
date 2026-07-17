@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0a3 - 2026-07-17
+
+- Serve the public release archives through a flat GitHub Pages package index
+  for reproducible consumer resolution without PyPI.
+
 ## 0.1.0a2 - 2026-07-17
 
 - Establish the Workspace Core identity, tenancy, invitation, and RBAC package.

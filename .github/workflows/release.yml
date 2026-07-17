@@ -50,3 +50,31 @@ jobs:
             printf '<a href="%s">%s</a>\n' "$archive" "$archive"
           done > index.html
           gh release create "$RELEASE_TAG" ./* --repo "$GITHUB_REPOSITORY" --generate-notes
+
+  publish-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Build flat package index
+        run: |
+          cd dist
+          for archive in *.whl *.tar.gz; do
+            printf '<a href="%s">%s</a>\n' "$archive" "$archive"
+          done > index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+      - name: Deploy package index
+        id: deployment
+        uses: actions/deploy-pages@v4
