@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0a4 - 2026-07-17
+
+- Publish SHA-256 fragments in the flat release index so consumer locks verify
+  artifact integrity as well as the immutable version URL.
+
 ## 0.1.0a3 - 2026-07-17
 
 - Serve the public release archives through a flat GitHub Pages package index
